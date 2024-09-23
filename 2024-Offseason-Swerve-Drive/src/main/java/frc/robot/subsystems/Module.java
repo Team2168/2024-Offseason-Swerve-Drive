@@ -4,11 +4,68 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.MotionMagicConfigs;
+import com.ctre.phoenix6.configs.MotorOutputConfigs;
+import com.ctre.phoenix6.configs.Slot0Configs;
+import com.ctre.phoenix6.configs.Slot1Configs;
+import com.ctre.phoenix6.configs.TalonFXConfiguration;
+import com.ctre.phoenix6.configs.TalonFXConfigurator;
+import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.MotionMagicVoltage;
+import com.ctre.phoenix6.hardware.CANcoder;
+import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.signals.InvertedValue;
+import com.ctre.phoenix6.signals.NeutralModeValue;
+
+import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 
 public class Module extends SubsystemBase {
-  /** Creates a new Module. */
-  public Module() {}
+  private TalonFX driveMotor;
+  private TalonFX azimuthMotor;
+  private CANcoder azimuthEncoder;
+  private TalonFXConfiguration driveConfiguration;
+  private TalonFXConfiguration azimuthConfiguration;
+  private InvertedValue invert = InvertedValue.Clockwise_Positive;
+  private NeutralModeValue brake = NeutralModeValue.Brake;
+  private MotorOutputConfigs driveMotorOutput;
+  private MotorOutputConfigs azimuthMotorOutput;
+  private Slot0Configs driveSlot0Configs;
+  private Slot0Configs azimuthSlot0Configs;
+  private MotionMagicConfigs azimuthMagicConfigs;
+  private MotionMagicVoltage azimuthVoltageConfigs;
+  private DutyCycleOut driveCycleOut = new DutyCycleOut(0.0);
+  private 
+  private double deadband = 0.002;
+
+  //TODO
+  //pid, connect cancoder to configs, motoroutputconfigs, motionmagic, feedback.
+  
+  public Module(TalonFX driveMotor, TalonFX azimuthMotor, CANcoder azimuthEncoder) {
+    this.driveMotor = driveMotor;
+    this.azimuthMotor = azimuthMotor;
+    this.azimuthEncoder = azimuthEncoder;
+
+    driveConfiguration = new TalonFXConfiguration();
+    azimuthConfiguration = new TalonFXConfiguration();
+
+    driveMotorOutput = driveConfiguration.MotorOutput;
+    azimuthMotorOutput = azimuthConfiguration.MotorOutput;
+    driveSlot0Configs = driveConfiguration.Slot0;
+    azimuthSlot0Configs = azimuthConfiguration.Slot0;
+    azimuthMagicConfigs = azimuthConfiguration.MotionMagic;
+
+
+    driveMotorOutput.withInverted(invert);
+    driveMotorOutput.withNeutralMode(brake);
+    driveMotorOutput.withDutyCycleNeutralDeadband(deadband);
+    azimuthMotorOutput.withInverted(invert);
+    azimuthMotorOutput.withNeutralMode(brake);
+    azimuthMotorOutput.withDutyCycleNeutralDeadband(deadband);
+
+  } 
 
   @Override
   public void periodic() {
