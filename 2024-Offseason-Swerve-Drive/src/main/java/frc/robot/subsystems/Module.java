@@ -18,10 +18,12 @@ import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 
@@ -29,6 +31,8 @@ public class Module extends SubsystemBase {
   private TalonFX driveMotor;
   private TalonFX azimuthMotor;
   private CANcoder azimuthEncoder;
+  private double canCoderTicks = 4096.0;
+  private double talonTicks = 2048;
   private TalonFXConfiguration driveConfiguration;
   private TalonFXConfiguration azimuthConfiguration;
   private InvertedValue invert = InvertedValue.Clockwise_Positive;
@@ -47,9 +51,17 @@ public class Module extends SubsystemBase {
   private double drivekP = 0.05;
   private double drivekI = 0.0025;
   private double drivekD = 0.005;
+  private double driveKs = 10;
+  private double driveKv = 5;
+  private double driveKa = 5;
   private double azimuthkP = 0.05;
   private double azimuthkI = 0.0025;
   private double azimuthkD = 0.005;
+  private double motionAccel = 12000;
+  private double cruiseVelocity = 10000;
+  
+  private double wheelDiameter = Units.inchesToMeters(1.5);
+  
 
   // TODO
   // pid, connect cancoder to configs, motoroutputconfigs, motionmagic, feedback.
@@ -61,11 +73,10 @@ public class Module extends SubsystemBase {
 
     driveConfiguration = new TalonFXConfiguration();
     azimuthConfiguration = new TalonFXConfiguration();
-
-    azimuthVoltage = new MotionMagicVoltage(0.0);
+    MotionMagicVoltage azimuthVoltage = new MotionMagicVoltage(0.0);
     azimuthMagicConfigs = azimuthConfiguration.MotionMagic;
-    azimuthMagicConfigs.withMotionMagicAcceleration(0.0025);
-    azimuthMagicConfigs.withMotionMagicCruiseVelocity(0.01);
+    azimuthMagicConfigs.withMotionMagicAcceleration(motionAccel);
+    azimuthMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
 
     driveMotorVelocity = new VelocityVoltage(0.0);
     driveMotorVelocityConfigs = driveConfiguration.Voltage;
@@ -89,13 +100,40 @@ public class Module extends SubsystemBase {
     driveSlot0Configs.withKP(drivekP);
     driveSlot0Configs.withKI(drivekI);
     driveSlot0Configs.withKD(drivekD);
+    driveSlot0Configs.withKS(driveKs);
     azimuthSlot0Configs.withKP(azimuthkP);
     azimuthSlot0Configs.withKI(azimuthkI);
     azimuthSlot0Configs.withKD(azimuthkD);
 
     azimuthFeedback.withRemoteCANcoder(azimuthEncoder);
-
   }
+
+  public void setTranslation(double meters) {
+    return;
+  }
+
+  public void setRotation() {
+    return;
+  }
+
+  public void dutyCycle() {
+    return;
+  }
+
+  public void resetEncoderToAbsolute() {
+    return;
+  }
+
+  public double getRotation() {
+    return 0.0;
+  }
+
+  public double returnTranslation() {
+    return 0.0;
+  }
+
+
+
 
   @Override
   public void periodic() {
