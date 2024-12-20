@@ -23,6 +23,7 @@ import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
@@ -43,6 +44,8 @@ public class Module extends SubsystemBase {
   private Slot0Configs azimuthSlot0Configs;
   private MotionMagicConfigs azimuthMagicConfigs;
   private MotionMagicVoltage azimuthVoltage;
+  private MotionMagicConfigs driveMagicConfigs;
+  private MotionMagicVoltage driveMotionVoltage;
   private VelocityVoltage driveMotorVelocity;
   private VoltageConfigs driveMotorVelocityConfigs;
   private FeedbackConfigs azimuthFeedback;
@@ -59,24 +62,30 @@ public class Module extends SubsystemBase {
   private double azimuthkD = 0.005;
   private double motionAccel = 12000;
   private double cruiseVelocity = 10000;
-  
-  private double wheelDiameter = Units.inchesToMeters(1.5);
-  
+
+
+  private double wheelDiameter = Units.inchesToMeters(4);
+  private double driveGearRatio = 1;
+  private double azimuthGearRatio = 1;
+  private double wheelCircumference = Math.PI * wheelDiameter;
 
   // TODO
   // pid, connect cancoder to configs, motoroutputconfigs, motionmagic, feedback.
 
-  public Module(TalonFX driveMotor, TalonFX azimuthMotor, CANcoder azimuthEncoder) {
-    this.driveMotor = driveMotor;
-    this.azimuthMotor = azimuthMotor;
-    this.azimuthEncoder = azimuthEncoder;
-
+  public Module(int driveID, int azimuthID, int canCoderID) {
+    driveMotor = new TalonFX(driveID);
+    azimuthMotor = new TalonFX(azimuthID);
+    azimuthEncoder = new CANcoder(canCoderID);
     driveConfiguration = new TalonFXConfiguration();
     azimuthConfiguration = new TalonFXConfiguration();
-    MotionMagicVoltage azimuthVoltage = new MotionMagicVoltage(0.0);
+    azimuthVoltage = new MotionMagicVoltage(0.0);
+    driveMotionVoltage = new MotionMagicVoltage(0.0);
     azimuthMagicConfigs = azimuthConfiguration.MotionMagic;
+    driveMagicConfigs = driveConfiguration.MotionMagic;
     azimuthMagicConfigs.withMotionMagicAcceleration(motionAccel);
     azimuthMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
+    driveMagicConfigs.withMotionMagicAcceleration(motionAccel);
+    driveMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
 
     driveMotorVelocity = new VelocityVoltage(0.0);
     driveMotorVelocityConfigs = driveConfiguration.Voltage;
@@ -106,14 +115,15 @@ public class Module extends SubsystemBase {
     azimuthSlot0Configs.withKD(azimuthkD);
 
     azimuthFeedback.withRemoteCANcoder(azimuthEncoder);
+
   }
 
   public void setTranslation(double meters) {
-    return;
+    driveMotor.setControl(driveMotorVelocity.withVelocity(metersToSensorUnits(meters)));
   }
 
-  public void setRotation() {
-    return;
+  public void setRotation(double rotations) {
+    azimuthMotor.setControl(azimuthVoltage.withPosition(Units.rotationsToDegrees(rotations)));
   }
 
   public void dutyCycle() {
@@ -128,12 +138,38 @@ public class Module extends SubsystemBase {
     return 0.0;
   }
 
-  public double returnTranslation() {
+  public double getTranslationMeters() {
     return 0.0;
   }
 
+  public double rotToMeters(double rotations) {
+    double metersTraveled = (rotations / driveGearRatio) * wheelCircumference;
+    return metersTraveled;
+  }
 
+  public double rpmToVelocity(double rpm) {
+    double velocity = rotToMeters(rpm) / 60;
+    return velocity;
+  }
 
+  public double metersToRot(double meters) {
+    double rot = (meters * driveGearRatio) / wheelCircumference;
+    return rot;
+  }
+
+  public double metersToSensorUnits(double rot) {
+    return metersToRot(rot) * 2048;
+  }
+
+  public double getRotFromEncoderPos() {
+    return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue())/azimuthGearRatio;
+  }
+
+  public SwerveModulePosition getPosition() {
+    return new SwerveModulePosition();
+  }
+
+  // public double
 
   @Override
   public void periodic() {
