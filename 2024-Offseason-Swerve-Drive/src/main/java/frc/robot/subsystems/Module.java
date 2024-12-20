@@ -119,11 +119,11 @@ public class Module extends SubsystemBase {
   }
 
   public void setTranslation(double meters) {
-    driveMotor.setControl(driveMotorVelocity.withVelocity(metersToSensorUnits(meters)));
+    driveMotor.setControl(driveMotorVelocity.withVelocity(metersToRot(meters)));
   }
 
   public void setRotation(double rotations) {
-    azimuthMotor.setControl(azimuthVoltage.withPosition(Units.rotationsToDegrees(rotations)));
+    azimuthMotor.setControl(azimuthVoltage.withPosition((rotations)));
   }
 
   public void dutyCycle() {
@@ -157,16 +157,16 @@ public class Module extends SubsystemBase {
     return rot;
   }
 
-  public double metersToSensorUnits(double rot) {
-    return metersToRot(rot) * 2048;
-  }
+  // public double metersToSensorUnits(double rot) {
+  //   return metersToRot(rot)/60;
+  // }
 
   public double getRotFromEncoderPos() {
     return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue())/azimuthGearRatio;
   }
 
-  public SwerveModulePosition getPosition() {
-    return new SwerveModulePosition();
+  public double getAngleDegrees() {
+    return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue()/azimuthGearRatio);
   }
 
   // public double
