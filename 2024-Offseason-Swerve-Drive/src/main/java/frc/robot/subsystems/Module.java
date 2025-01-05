@@ -62,6 +62,7 @@ public class Module extends SubsystemBase {
   private double azimuthkD = 0.005;
   private double motionAccel = 12000;
   private double cruiseVelocity = 10000;
+  
 
 
   private double wheelDiameter = Units.inchesToMeters(4);
@@ -167,6 +168,10 @@ public class Module extends SubsystemBase {
 
   public double getAngleDegrees() {
     return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue()/azimuthGearRatio);
+  }
+
+  public void resetEncoder() {
+    driveMotor.setPosition(0.0);
   }
 
   // public double

@@ -18,7 +18,7 @@ package frc.robot;
  */
 public final class Constants {
   public static class OperatorConstants {
-
+    public static int kDriverControllerPort = 0;
   }
 
   public static class DrivetrainConstants {
@@ -47,5 +47,6 @@ public final class Constants {
     public static final double BR_Y = -0.381;
     
     public static final double MAX_VELOCITY = 4.00; //m/s
+    public static final double MAX_ANGULAR_VELOCITY = 3.00;
   }
 }
