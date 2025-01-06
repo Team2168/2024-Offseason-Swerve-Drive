@@ -72,6 +72,7 @@ public class Module extends SubsystemBase {
 
   // TODO
   // pid, connect cancoder to configs, motoroutputconfigs, motionmagic, feedback.
+  // ks, kv and ka for drive (velocity) motors, ks and kv for velocity, use phoenix or sysid.
 
   public Module(int driveID, int azimuthID, int canCoderID) {
     driveMotor = new TalonFX(driveID);
