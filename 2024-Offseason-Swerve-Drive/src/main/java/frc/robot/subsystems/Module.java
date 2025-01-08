@@ -66,15 +66,17 @@ public class Module extends SubsystemBase {
 
 
   private double wheelDiameter = Units.inchesToMeters(4);
-  private double driveGearRatio = 1;
-  private double azimuthGearRatio = 1;
+  private double driveGearRatio;
+  private double azimuthGearRatio;
   private double wheelCircumference = Math.PI * wheelDiameter;
 
   // TODO
   // pid, connect cancoder to configs, motoroutputconfigs, motionmagic, feedback.
   // ks, kv and ka for drive (velocity) motors, ks and kv for velocity, use phoenix or sysid.
 
-  public Module(int driveID, int azimuthID, int canCoderID) {
+  public Module(int driveID, int azimuthID, int canCoderID, double steeringGearRation, double driveGearRatio) {
+    this.driveGearRatio = driveGearRatio;
+    this.azimuthGearRatio = steeringGearRation;
     driveMotor = new TalonFX(driveID);
     azimuthMotor = new TalonFX(azimuthID);
     azimuthEncoder = new CANcoder(canCoderID);

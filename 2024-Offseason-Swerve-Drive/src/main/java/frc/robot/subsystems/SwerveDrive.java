@@ -17,6 +17,8 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.networktables.NetworkTableInstance;
+import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.Constants;
 
@@ -29,14 +31,22 @@ public class SwerveDrive extends SubsystemBase {
   private Pigeon2 pigeon;
   private SwerveDriveOdometry odometry;
   private SwerveDrivePoseEstimator estimator;
+  private double mk4SteeringRatio = 12.8;
+  private double mk4DrivingRatio = 8.14;
+  private double wcpxSteeringRatio = 13.3714;
+  private double wcpxDrivingRatio = 8.10;
   private Module frModule = new Module(Constants.DrivetrainConstants.FR_DRIVE,
-      Constants.DrivetrainConstants.FR_AZIMUTH, Constants.DrivetrainConstants.FR_CANCODER_ID);
+      Constants.DrivetrainConstants.FR_AZIMUTH, Constants.DrivetrainConstants.FR_CANCODER_ID, wcpxSteeringRatio,
+      wcpxDrivingRatio);
   private Module flModule = new Module(Constants.DrivetrainConstants.FL_DRIVE,
-      Constants.DrivetrainConstants.FL_AZIMUTH, Constants.DrivetrainConstants.FL_CANCODER_ID);
+      Constants.DrivetrainConstants.FL_AZIMUTH, Constants.DrivetrainConstants.FL_CANCODER_ID, wcpxSteeringRatio,
+      wcpxDrivingRatio);
   private Module blModule = new Module(Constants.DrivetrainConstants.BL_DRIVE,
-      Constants.DrivetrainConstants.BL_AZIMUTH, Constants.DrivetrainConstants.BL_CANCODER_ID);
+      Constants.DrivetrainConstants.BL_AZIMUTH, Constants.DrivetrainConstants.BL_CANCODER_ID, mk4SteeringRatio,
+      mk4DrivingRatio);
   private Module brModule = new Module(Constants.DrivetrainConstants.BR_DRIVE,
-      Constants.DrivetrainConstants.BR_AZIMUTH, Constants.DrivetrainConstants.BR_CANCODER_ID);
+      Constants.DrivetrainConstants.BR_AZIMUTH, Constants.DrivetrainConstants.BR_CANCODER_ID, mk4SteeringRatio,
+      mk4DrivingRatio);
 
   private Translation2d flLocation = new Translation2d(Constants.DrivetrainConstants.FL_X,
       Constants.DrivetrainConstants.FL_Y);
@@ -48,6 +58,8 @@ public class SwerveDrive extends SubsystemBase {
       Constants.DrivetrainConstants.BR_Y);
 
   private Module[] modules = { frModule, flModule, blModule, brModule };
+
+  StructArrayPublisher<SwerveModuleState> publisher = NetworkTableInstance.getDefault().getStructArrayTopic("My states", SwerveModuleState.struct).publish();
 
   public SwerveDrive() {
     states = new SwerveModuleState[4];
@@ -78,11 +90,12 @@ public class SwerveDrive extends SubsystemBase {
   }
 
   public static SwerveDrive getInstance() {
-    if(swerveInstance == null) {
+    if (swerveInstance == null) {
       swerveInstance = new SwerveDrive();
     }
     return swerveInstance;
   }
+
   public Pose2d getPosition() {
     return odometry.getPoseMeters();
   }
@@ -92,6 +105,12 @@ public class SwerveDrive extends SubsystemBase {
       module.resetEncoder();
     }
   }
+
+  public SwerveModuleState[] getStates() {
+    return states;
+  }
+
+  
 
   public void driveController(double xSpeed, double ySpeed, double rot) {
     SlewRateLimiter joystickOptimizer = new SlewRateLimiter(0.05);
@@ -104,6 +123,11 @@ public class SwerveDrive extends SubsystemBase {
 
   @Override
   public void periodic() {
-    // This method will be called once per scheduler run
+    publisher.set(getStates());
+    
+  }
+
+  public static void main(String[] args) {
+  
   }
 }
