@@ -32,8 +32,6 @@ public class Module extends SubsystemBase {
   private TalonFX driveMotor;
   private TalonFX azimuthMotor;
   private CANcoder azimuthEncoder;
-  private double canCoderTicks = 4096.0;
-  private double talonTicks = 2048;
   private TalonFXConfiguration driveConfiguration;
   private TalonFXConfiguration azimuthConfiguration;
   private InvertedValue invert = InvertedValue.Clockwise_Positive;
@@ -60,8 +58,8 @@ public class Module extends SubsystemBase {
   private double azimuthkP = 0.05;
   private double azimuthkI = 0.0025;
   private double azimuthkD = 0.005;
-  private double motionAccel = 12000;
-  private double cruiseVelocity = 10000;
+  private double motionAccel = 120;
+  private double cruiseVelocity = 100;
   
 
 
@@ -128,6 +126,12 @@ public class Module extends SubsystemBase {
 
   public void setRotation(double rotations) {
     azimuthMotor.setControl(azimuthVoltage.withPosition((rotations)));
+  }
+
+  public void setInputToMotor(double input) {
+    DutyCycleOut output = new DutyCycleOut(input);
+    driveMotor.setControl(output);
+    azimuthMotor.setControl(output);
   }
 
   public void dutyCycle() {

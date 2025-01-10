@@ -49,4 +49,8 @@ public final class Constants {
     public static final double MAX_VELOCITY = 4.00; //m/s
     public static final double MAX_ANGULAR_VELOCITY = 3.00;
   }
+
+  public static class MotorConstants {
+    public static final int SIMULATED_MOTOR_ID = 14;
+  }
 }

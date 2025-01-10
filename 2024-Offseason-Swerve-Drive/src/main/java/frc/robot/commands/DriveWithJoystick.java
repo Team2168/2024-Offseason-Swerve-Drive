@@ -10,25 +10,28 @@ import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import frc.robot.OI;
 import frc.robot.subsystems.SwerveDrive;
 
 public class DriveWithJoystick extends Command {
  SwerveDrive swerveDrive;
- CommandXboxController controller;
-  public DriveWithJoystick(SwerveDrive swerveDrive, CommandXboxController controller) {
+ OI oi;
+  public DriveWithJoystick(SwerveDrive swerveDrive) {
     this.swerveDrive = swerveDrive;
-    this.controller = controller;
+
     addRequirements(swerveDrive);
   }
 
   // Called when the command is initially scheduled.
   @Override
-  public void initialize() {}
+  public void initialize() {
+    oi = OI.getInstance();
+  }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    swerveDrive.driveController(controller.getRightX(), controller.getRightY(), controller.getLeftY());
+    swerveDrive.driveController(oi.getRightX(), oi.getRightY(), oi.getLeftY());
   }
 
   // Called once the command ends or is interrupted.

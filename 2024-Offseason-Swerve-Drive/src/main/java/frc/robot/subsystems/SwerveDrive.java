@@ -4,9 +4,11 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 
+import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -19,7 +21,10 @@ import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.wpilibj.DutyCycle;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Constants;
 
 public class SwerveDrive extends SubsystemBase {
@@ -59,8 +64,6 @@ public class SwerveDrive extends SubsystemBase {
 
   private Module[] modules = { frModule, flModule, blModule, brModule };
 
-  StructArrayPublisher<SwerveModuleState> publisher = NetworkTableInstance.getDefault().getStructArrayTopic("My states", SwerveModuleState.struct).publish();
-
   public SwerveDrive() {
     states = new SwerveModuleState[4];
     modulePositions = new SwerveModulePosition[4];
@@ -72,6 +75,8 @@ public class SwerveDrive extends SubsystemBase {
     speeds = new ChassisSpeeds();
     pigeon = new Pigeon2(Constants.DrivetrainConstants.PIGEON_ID);
     odometry = new SwerveDriveOdometry(kinematics, pigeon.getRotation2d(), modulePositions);
+    estimator = new SwerveDrivePoseEstimator(kinematics, pigeon.getRotation2d(), modulePositions,
+        odometry.getPoseMeters());
     resetEncoders();
 
   }
@@ -79,7 +84,7 @@ public class SwerveDrive extends SubsystemBase {
   public void driveFieldRelative(ChassisSpeeds chassisSpeeds, boolean fieldRelative) {
     ChassisSpeeds speeds = fieldRelative ? ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, pigeon.getRotation2d())
         : ChassisSpeeds.fromRobotRelativeSpeeds(chassisSpeeds, pigeon.getRotation2d());
-    SwerveModuleState[] states = kinematics.toSwerveModuleStates(speeds);
+    states = kinematics.toSwerveModuleStates(speeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.DrivetrainConstants.MAX_VELOCITY);
     for (int i = 0; i <= 3; i++) {
       SwerveModuleState optimizedState = SwerveModuleState.optimize(states[i],
@@ -87,6 +92,7 @@ public class SwerveDrive extends SubsystemBase {
       modules[i].setTranslation(optimizedState.speedMetersPerSecond);
       modules[i].setRotation(optimizedState.angle.getRotations());
     }
+
   }
 
   public static SwerveDrive getInstance() {
@@ -100,6 +106,10 @@ public class SwerveDrive extends SubsystemBase {
     return odometry.getPoseMeters();
   }
 
+  public Pose2d getPositionVision() {
+    return null;
+  }
+
   public void resetEncoders() {
     for (Module module : modules) {
       module.resetEncoder();
@@ -110,24 +120,38 @@ public class SwerveDrive extends SubsystemBase {
     return states;
   }
 
-  
-
   public void driveController(double xSpeed, double ySpeed, double rot) {
-    SlewRateLimiter joystickOptimizer = new SlewRateLimiter(0.05);
+    SlewRateLimiter joystickOptimizer = new SlewRateLimiter(1.5);
     double xSpeedOptimized = joystickOptimizer.calculate(xSpeed * Constants.DrivetrainConstants.MAX_VELOCITY);
     double ySpeedOptimized = joystickOptimizer.calculate(ySpeed * Constants.DrivetrainConstants.MAX_VELOCITY);
-    double rotOptimized = joystickOptimizer.calculate(rot * Constants.DrivetrainConstants.MAX_VELOCITY);
+    double rotOptimized = joystickOptimizer.calculate(rot * Constants.DrivetrainConstants.MAX_ANGULAR_VELOCITY);
     ChassisSpeeds controllerSpeeds = new ChassisSpeeds(xSpeedOptimized, ySpeedOptimized, rotOptimized);
     driveFieldRelative(controllerSpeeds, true);
   }
 
+  public void testMotor(double input) {
+    modules[0].setTranslation(input);
+  }
+
+  public void setMotorsInput(double input) {
+
+    for (Module module : modules) {
+      module.setInputToMotor(input);
+    }
+  }
+
+  // StructArrayPublisher<SwerveModuleState> publisher = NetworkTableInstance.getDefault()
+  //     .getStructArrayTopic("My states", SwerveModuleState.struct).publish();
   @Override
   public void periodic() {
-    publisher.set(getStates());
+    // publisher.set(getStates());
+
+    double[] loggingState = {4,3,5,6,7,8,9,2};
+    SmartDashboard.putNumberArray("Swerve state", loggingState);
     
   }
 
   public static void main(String[] args) {
-  
+
   }
 }
