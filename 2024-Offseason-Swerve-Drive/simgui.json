@@ -53,6 +53,16 @@
       "/FMSInfo": "FMSInfo"
     }
   },
+  "NetworkTables": {
+    "transitory": {
+      "SwerveModuleState[]##v_/MyStates": {
+        "SwerveModuleState##v_[2]": {
+          "open": true
+        },
+        "open": true
+      }
+    }
+  },
   "NetworkTables Info": {
     "visible": true
   }

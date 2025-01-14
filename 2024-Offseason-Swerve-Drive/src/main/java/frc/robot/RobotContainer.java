@@ -4,18 +4,14 @@
 
 package frc.robot;
 
-import frc.robot.Constants.OperatorConstants;
-import frc.robot.commands.Autos;
-import frc.robot.commands.DriveWithJoystick;
-import frc.robot.commands.ExampleCommand;
-import frc.robot.commands.SetInputMotor;
-import frc.robot.commands.TestMotor;
-import frc.robot.subsystems.ExampleSubsystem;
-import frc.robot.subsystems.SimulatedMotor;
-import frc.robot.subsystems.SwerveDrive;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.commands.Autos;
+import frc.robot.commands.DriveWithJoystick;
+import frc.robot.commands.ResetEncoders;
+import frc.robot.subsystems.ExampleSubsystem;
+import frc.robot.subsystems.SwerveDrive;
 
 /**
  * This class is where the bulk of the robot should be declared. Since
@@ -30,7 +26,6 @@ public class RobotContainer {
   // The robot's subsystems and commands are defined here...
   private final ExampleSubsystem m_exampleSubsystem = new ExampleSubsystem();
   private final SwerveDrive swerve = SwerveDrive.getInstance();
-  SimulatedMotor motor = SimulatedMotor.getInstance();
 
   // Replace with CommandPS4Controller or CommandJoystick if needed
   private final OI controller = OI.getInstance();
@@ -63,6 +58,8 @@ public class RobotContainer {
     // new Trigger(m_exampleSubsystem::exampleCondition)
     //     .onTrue(new ExampleCommand(m_exampleSubsystem));
     swerve.setDefaultCommand(new DriveWithJoystick(swerve));
+
+    controller.a().onTrue(new ResetEncoders());
     // // // Schedule `exampleMethodCommand` when the Xbox controller's B button is
     // // // pressed,
     // // // cancelling on release.

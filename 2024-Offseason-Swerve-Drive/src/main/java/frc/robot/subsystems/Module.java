@@ -25,6 +25,7 @@ import com.ctre.phoenix6.signals.NeutralModeValue;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 
@@ -49,19 +50,17 @@ public class Module extends SubsystemBase {
   private FeedbackConfigs azimuthFeedback;
   private DutyCycleOut driveCycleOut = new DutyCycleOut(0.0);
   private double deadband = 0.002;
-  private double drivekP = 0.05;
+  private double drivekP = 1;
   private double drivekI = 0.0025;
   private double drivekD = 0.005;
   private double driveKs = 10;
   private double driveKv = 5;
   private double driveKa = 5;
-  private double azimuthkP = 0.05;
+  private double azimuthkP = 1;
   private double azimuthkI = 0.0025;
   private double azimuthkD = 0.005;
   private double motionAccel = 120;
   private double cruiseVelocity = 100;
-  
-
 
   private double wheelDiameter = Units.inchesToMeters(4);
   private double driveGearRatio;
@@ -70,7 +69,8 @@ public class Module extends SubsystemBase {
 
   // TODO
   // pid, connect cancoder to configs, motoroutputconfigs, motionmagic, feedback.
-  // ks, kv and ka for drive (velocity) motors, ks and kv for velocity, use phoenix or sysid.
+  // ks, kv and ka for drive (velocity) motors, ks and kv for velocity, use
+  // phoenix or sysid.
 
   public Module(int driveID, int azimuthID, int canCoderID, double steeringGearRation, double driveGearRatio) {
     this.driveGearRatio = driveGearRatio;
@@ -118,6 +118,9 @@ public class Module extends SubsystemBase {
 
     azimuthFeedback.withRemoteCANcoder(azimuthEncoder);
 
+    driveMotor.getConfigurator().apply(driveConfiguration);
+    azimuthMotor.getConfigurator().apply(azimuthConfiguration);
+
   }
 
   public void setTranslation(double meters) {
@@ -125,7 +128,12 @@ public class Module extends SubsystemBase {
   }
 
   public void setRotation(double rotations) {
-    azimuthMotor.setControl(azimuthVoltage.withPosition((rotations)));
+    azimuthMotor.setControl(azimuthVoltage.withPosition((rotations * azimuthGearRatio)));
+  }
+
+  public void setInput(double meters, double rotations) {
+    setTranslation(meters);
+    setRotation(rotations);
   }
 
   public void setInputToMotor(double input) {
@@ -166,20 +174,23 @@ public class Module extends SubsystemBase {
   }
 
   // public double metersToSensorUnits(double rot) {
-  //   return metersToRot(rot)/60;
+  // return metersToRot(rot)/60;
   // }
 
   public double getRotFromEncoderPos() {
-    return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue())/azimuthGearRatio;
+    return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue()) / azimuthGearRatio;
   }
 
   public double getAngleDegrees() {
-    return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue()/azimuthGearRatio);
+    return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue() / azimuthGearRatio);
   }
 
   public void resetEncoder() {
     driveMotor.setPosition(0.0);
+    azimuthMotor.setPosition(0.0);
   }
+
+
 
   // public double
 

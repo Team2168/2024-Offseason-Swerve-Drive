@@ -31,13 +31,13 @@ public class DriveWithJoystick extends Command {
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    swerveDrive.driveController(oi.getRightX(), oi.getRightY(), oi.getLeftY());
+    swerveDrive.driveController(-oi.getRightY(), -oi.getRightX(), -oi.getLeftX());
   }
 
   // Called once the command ends or is interrupted.
   @Override
   public void end(boolean interrupted) {
-    swerveDrive.driveFieldRelative(new ChassisSpeeds(0,0,0),false);
+    swerveDrive.driveFieldRelative(new ChassisSpeeds(0,0,0),false,0);
   }
 
   // Returns true when the command should end.
