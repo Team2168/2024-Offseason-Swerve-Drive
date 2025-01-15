@@ -36,41 +36,29 @@ public class SwerveDrive extends SubsystemBase {
   private Pigeon2 pigeon;
   private SwerveDriveOdometry odometry;
   private SwerveDrivePoseEstimator estimator;
-  private double mk4SteeringRatio = 12.8;
-  private double mk4DrivingRatio = 8.14;
-  private double wcpxSteeringRatio = 13.3714;
-  private double wcpxDrivingRatio = 8.10;
-  private Module frModule = new Module(Constants.DrivetrainConstants.FR_DRIVE,
-      Constants.DrivetrainConstants.FR_AZIMUTH, Constants.DrivetrainConstants.FR_CANCODER_ID, wcpxSteeringRatio,
-      wcpxDrivingRatio);
-  private Module flModule = new Module(Constants.DrivetrainConstants.FL_DRIVE,
-      Constants.DrivetrainConstants.FL_AZIMUTH, Constants.DrivetrainConstants.FL_CANCODER_ID, wcpxSteeringRatio,
-      wcpxDrivingRatio);
-  private Module blModule = new Module(Constants.DrivetrainConstants.BL_DRIVE,
-      Constants.DrivetrainConstants.BL_AZIMUTH, Constants.DrivetrainConstants.BL_CANCODER_ID, mk4SteeringRatio,
-      mk4DrivingRatio);
-  private Module brModule = new Module(Constants.DrivetrainConstants.BR_DRIVE,
-      Constants.DrivetrainConstants.BR_AZIMUTH, Constants.DrivetrainConstants.BR_CANCODER_ID, mk4SteeringRatio,
-      mk4DrivingRatio);
 
-  private Translation2d flLocation = new Translation2d(Constants.DrivetrainConstants.FL_X,
-      Constants.DrivetrainConstants.FL_Y);
-  private Translation2d fRLocation = new Translation2d(Constants.DrivetrainConstants.FR_X,
-      Constants.DrivetrainConstants.FR_Y);
-  private Translation2d blLocation = new Translation2d(Constants.DrivetrainConstants.BL_X,
-      Constants.DrivetrainConstants.BL_Y);
-  private Translation2d bRLocation = new Translation2d(Constants.DrivetrainConstants.BR_X,
-      Constants.DrivetrainConstants.BR_Y);
+  private Translation2d flLocation = new Translation2d(Constants.DrivetrainConstants.X_POS_MODULE,
+      Constants.DrivetrainConstants.Y_POS_MODULE);
+  private Translation2d frLocation = new Translation2d(Constants.DrivetrainConstants.X_POS_MODULE,
+      -Constants.DrivetrainConstants.Y_POS_MODULE);
+  private Translation2d blLocation = new Translation2d(-Constants.DrivetrainConstants.X_POS_MODULE,
+      Constants.DrivetrainConstants.Y_POS_MODULE);
+  private Translation2d brLocation = new Translation2d(-Constants.DrivetrainConstants.X_POS_MODULE,
+      -Constants.DrivetrainConstants.Y_POS_MODULE);
 
-  private Module[] modules = { frModule, brModule, frModule, blModule };
-  private Translation2d[] locations = { fRLocation, bRLocation, flLocation, blLocation };
+  private Module[] modules = new Module[4];
+  private Translation2d[] locations = {flLocation, frLocation, blLocation, brLocation};
 
   StructArrayPublisher<SwerveModuleState> publisher;
 
   public SwerveDrive() {
+
     for (int i = 0; i < 4; i++) {
       states[i] = new SwerveModuleState();
       modulePositions[i] = new SwerveModulePosition();
+      modules[i] = new Module(Constants.DrivetrainConstants.driveIDs[i], Constants.DrivetrainConstants.azimuthIDs[i],
+          Constants.DrivetrainConstants.cancoderIDs[i], Constants.DrivetrainConstants.drivingRatios[i],
+          Constants.DrivetrainConstants.steeringRatios[i]);
     }
     kinematics = new SwerveDriveKinematics(locations);
     speeds = new ChassisSpeeds();
@@ -135,7 +123,7 @@ public class SwerveDrive extends SubsystemBase {
     // double rotOptimized = joystickOptimizer.calculate(rot *
     // Constants.DrivetrainConstants.MAX_ANGULAR_VELOCITY);
     ChassisSpeeds controllerSpeeds = new ChassisSpeeds(xSpeed * 4, ySpeed * 4, rot * 3);
-    driveFieldRelative(controllerSpeeds, true, 0.5);
+    driveFieldRelative(controllerSpeeds, true, 0.1);
   }
 
   public void testMotor(double input) {

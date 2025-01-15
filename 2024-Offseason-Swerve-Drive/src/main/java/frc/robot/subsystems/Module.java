@@ -4,6 +4,7 @@
 
 package frc.robot.subsystems;
 
+import com.ctre.phoenix6.configs.CurrentLimitsConfigs;
 import com.ctre.phoenix6.configs.FeedbackConfigs;
 import com.ctre.phoenix6.configs.MotionMagicConfigs;
 import com.ctre.phoenix6.configs.MotorOutputConfigs;
@@ -13,6 +14,7 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.configs.TalonFXConfigurator;
 import com.ctre.phoenix6.configs.VoltageConfigs;
 import com.ctre.phoenix6.controls.DutyCycleOut;
+import com.ctre.phoenix6.controls.MotionMagicVelocityVoltage;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
 import com.ctre.phoenix6.controls.VelocityVoltage;
 import com.ctre.phoenix6.hardware.CANcoder;
@@ -48,6 +50,8 @@ public class Module extends SubsystemBase {
   private VelocityVoltage driveMotorVelocity;
   private VoltageConfigs driveMotorVelocityConfigs;
   private FeedbackConfigs azimuthFeedback;
+  private CurrentLimitsConfigs driveCurrent;
+  private CurrentLimitsConfigs azimuthCurrent;
   private DutyCycleOut driveCycleOut = new DutyCycleOut(0.0);
   private double deadband = 0.002;
   private double drivekP = 1;
@@ -61,8 +65,9 @@ public class Module extends SubsystemBase {
   private double azimuthkD = 0.005;
   private double motionAccel = 120;
   private double cruiseVelocity = 100;
+  private MotionMagicVelocityVoltage volts;
 
-  private double wheelDiameter = Units.inchesToMeters(4);
+  private double wheelDiameter = Units.inchesToMeters(1.5);
   private double driveGearRatio;
   private double azimuthGearRatio;
   private double wheelCircumference = Math.PI * wheelDiameter;
@@ -100,10 +105,13 @@ public class Module extends SubsystemBase {
     azimuthSlot0Configs = azimuthConfiguration.Slot0;
     azimuthMagicConfigs = azimuthConfiguration.MotionMagic;
     azimuthFeedback = azimuthConfiguration.Feedback;
+    driveCurrent = driveConfiguration.CurrentLimits;
+    azimuthCurrent = azimuthConfiguration.CurrentLimits;
 
     driveMotorOutput.withInverted(invert);
     driveMotorOutput.withNeutralMode(brake);
     driveMotorOutput.withDutyCycleNeutralDeadband(deadband);
+    
     azimuthMotorOutput.withInverted(invert);
     azimuthMotorOutput.withNeutralMode(brake);
     azimuthMotorOutput.withDutyCycleNeutralDeadband(deadband);
@@ -115,6 +123,15 @@ public class Module extends SubsystemBase {
     azimuthSlot0Configs.withKP(azimuthkP);
     azimuthSlot0Configs.withKI(azimuthkI);
     azimuthSlot0Configs.withKD(azimuthkD);
+
+    driveCurrent.withSupplyCurrentLimitEnable(true);
+    azimuthCurrent.withSupplyCurrentLimitEnable(true);
+    driveCurrent.withSupplyCurrentLimit(35);
+    driveCurrent.withSupplyCurrentThreshold(40);
+    driveCurrent.withSupplyTimeThreshold(0.1);
+    azimuthCurrent.withSupplyCurrentLimit(10);
+    azimuthCurrent.withSupplyCurrentThreshold(15);
+    azimuthCurrent.withSupplyTimeThreshold(0.1);
 
     azimuthFeedback.withRemoteCANcoder(azimuthEncoder);
 

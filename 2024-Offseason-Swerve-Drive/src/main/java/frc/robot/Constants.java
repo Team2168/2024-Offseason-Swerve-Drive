@@ -4,6 +4,8 @@
 
 package frc.robot;
 
+import edu.wpi.first.math.util.Units;
+
 /**
  * The Constants class provides a convenient place for teams to hold robot-wide
  * numerical or boolean
@@ -22,10 +24,10 @@ public final class Constants {
   }
 
   public static class DrivetrainConstants {
-    public static final int FL_DRIVE = 15; //1
-    public static final int FR_DRIVE = 1; //wcpx steering: 13.3714:1, driving: 8.10:1
-    public static final int BL_DRIVE = 14; //mk4 steering: 12.8:1; driving: 8.14:1
-    public static final int BR_DRIVE = 0; //mk4 steering: 12.8:1; driving: 8.14:1
+    public static final int FL_DRIVE = 15;//mk4 steering: 12.8:1; driving: 8.14:1
+    public static final int FR_DRIVE = 1; //mk4 steering: 12.8:1; driving: 8.14:1
+    public static final int BL_DRIVE = 14; //wcpx steering: 13.3714:1, driving: 8.10:1
+    public static final int BR_DRIVE = 0; //wcpx steering: 13.3714:1, driving: 8.10:1
     public static final int FL_AZIMUTH = 9; // change
     public static final int FR_AZIMUTH = 7; // change
     public static final int BL_AZIMUTH = 8; // change
@@ -37,17 +39,17 @@ public final class Constants {
 
     public static final int PIGEON_ID = 17; //change
 
-    public static final double FL_X = -0.381; // meters
-    public static final double FL_Y = 0.381;
-    public static final double FR_X = 0.381;
-    public static final double FR_Y = 0.381;
-    public static final double BL_X = -0.381; // meters
-    public static final double BL_Y = -0.381;
-    public static final double BR_X = 0.381;
-    public static final double BR_Y = -0.381;
+    public static double Y_POS_MODULE = Units.inchesToMeters(10);
+    public static double X_POS_MODULE = Units.inchesToMeters(12);
     
     public static final double MAX_VELOCITY = 4.00; //m/s
     public static final double MAX_ANGULAR_VELOCITY = 3.00;
+
+    public static int[] driveIDs = {FL_DRIVE, FR_DRIVE, BL_DRIVE, BR_DRIVE};
+    public static int[] azimuthIDs = {FL_AZIMUTH, FR_AZIMUTH, BL_AZIMUTH, BR_AZIMUTH};
+    public static int[] cancoderIDs = {FL_CANCODER_ID, FR_CANCODER_ID, BL_CANCODER_ID, BR_CANCODER_ID};
+    public static double[] drivingRatios = {8.14, 8.14, 8.10, 8.10};
+    public static double[] steeringRatios = {12.8, 12.8, 13.3714, 13.3714};
   }
 
   public static class MotorConstants {
