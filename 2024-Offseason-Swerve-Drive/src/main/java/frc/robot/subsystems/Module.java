@@ -80,7 +80,7 @@ public class Module extends SubsystemBase {
   public Module(int driveID, int azimuthID, int canCoderID, double steeringGearRation, double driveGearRatio) {
     this.driveGearRatio = driveGearRatio;
     this.azimuthGearRatio = steeringGearRation;
-    driveMotor = new TalonFX(driveID);
+    driveMotor = new TalonFX(driveID, "RoboRIO");
     azimuthMotor = new TalonFX(azimuthID);
     azimuthEncoder = new CANcoder(canCoderID);
     driveConfiguration = new TalonFXConfiguration();
