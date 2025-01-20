@@ -24,9 +24,11 @@ import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
+import edu.wpi.first.math.StateSpaceUtil;
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.simulation.XboxControllerSim;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
@@ -66,6 +68,7 @@ public class Module extends SubsystemBase {
   private double motionAccel = 120;
   private double cruiseVelocity = 100;
   private MotionMagicVelocityVoltage volts;
+  private SwerveDrivetrain trian;
 
   private double wheelDiameter = Units.inchesToMeters(1.5);
   private double driveGearRatio;
@@ -80,24 +83,24 @@ public class Module extends SubsystemBase {
   public Module(int driveID, int azimuthID, int canCoderID, double steeringGearRation, double driveGearRatio) {
     this.driveGearRatio = driveGearRatio;
     this.azimuthGearRatio = steeringGearRation;
-    driveMotor = new TalonFX(driveID, "RoboRIO");
+    driveMotor = new TalonFX(driveID); //omit the canbus
     azimuthMotor = new TalonFX(azimuthID);
     azimuthEncoder = new CANcoder(canCoderID);
     driveConfiguration = new TalonFXConfiguration();
     azimuthConfiguration = new TalonFXConfiguration();
     azimuthVoltage = new MotionMagicVoltage(0.0);
-    driveMotionVoltage = new MotionMagicVoltage(0.0);
-    azimuthMagicConfigs = azimuthConfiguration.MotionMagic;
-    driveMagicConfigs = driveConfiguration.MotionMagic;
-    azimuthMagicConfigs.withMotionMagicAcceleration(motionAccel);
-    azimuthMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
-    driveMagicConfigs.withMotionMagicAcceleration(motionAccel);
-    driveMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
+    // driveMotionVoltage = new MotionMagicVoltage(0.0);
+    // azimuthMagicConfigs = azimuthConfiguration.MotionMagic;
+    // driveMagicConfigs = driveConfiguration.MotionMagic;
+    // azimuthMagicConfigs.withMotionMagicAcceleration(motionAccel);
+    // azimuthMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
+    // driveMagicConfigs.withMotionMagicAcceleration(motionAccel);
+    // driveMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
 
     driveMotorVelocity = new VelocityVoltage(0.0);
-    driveMotorVelocityConfigs = driveConfiguration.Voltage;
-    driveMotorVelocityConfigs.withPeakForwardVoltage(10);
-    driveMotorVelocityConfigs.withPeakReverseVoltage(10);
+    // driveMotorVelocityConfigs = driveConfiguration.Voltage;
+    // driveMotorVelocityConfigs.withPeakForwardVoltage(10);
+    // driveMotorVelocityConfigs.withPeakReverseVoltage(10);
 
     driveMotorOutput = driveConfiguration.MotorOutput;
     azimuthMotorOutput = azimuthConfiguration.MotorOutput;
@@ -108,35 +111,37 @@ public class Module extends SubsystemBase {
     driveCurrent = driveConfiguration.CurrentLimits;
     azimuthCurrent = azimuthConfiguration.CurrentLimits;
 
-    driveMotorOutput.withInverted(invert);
-    driveMotorOutput.withNeutralMode(brake);
-    driveMotorOutput.withDutyCycleNeutralDeadband(deadband);
+    // driveMotorOutput.withInverted(invert);
+    // driveMotorOutput.withNeutralMode(brake);
+    // driveMotorOutput.withDutyCycleNeutralDeadband(deadband);
     
-    azimuthMotorOutput.withInverted(invert);
-    azimuthMotorOutput.withNeutralMode(brake);
-    azimuthMotorOutput.withDutyCycleNeutralDeadband(deadband);
+    // azimuthMotorOutput.withInverted(invert);
+    // azimuthMotorOutput.withNeutralMode(brake);
+    // azimuthMotorOutput.withDutyCycleNeutralDeadband(deadband);
 
-    driveSlot0Configs.withKP(drivekP);
-    driveSlot0Configs.withKI(drivekI);
-    driveSlot0Configs.withKD(drivekD);
-    driveSlot0Configs.withKS(driveKs);
-    azimuthSlot0Configs.withKP(azimuthkP);
-    azimuthSlot0Configs.withKI(azimuthkI);
-    azimuthSlot0Configs.withKD(azimuthkD);
+    // driveSlot0Configs.withKP(drivekP);
+    // driveSlot0Configs.withKI(drivekI);
+    // driveSlot0Configs.withKD(drivekD);
+    // driveSlot0Configs.withKS(driveKs);
+    // azimuthSlot0Configs.withKP(azimuthkP);
+    // azimuthSlot0Configs.withKI(azimuthkI);
+    // azimuthSlot0Configs.withKD(azimuthkD);
 
-    driveCurrent.withSupplyCurrentLimitEnable(true);
-    azimuthCurrent.withSupplyCurrentLimitEnable(true);
-    driveCurrent.withSupplyCurrentLimit(35);
-    driveCurrent.withSupplyCurrentThreshold(40);
-    driveCurrent.withSupplyTimeThreshold(0.1);
-    azimuthCurrent.withSupplyCurrentLimit(10);
-    azimuthCurrent.withSupplyCurrentThreshold(15);
-    azimuthCurrent.withSupplyTimeThreshold(0.1);
+    // driveCurrent.withSupplyCurrentLimitEnable(true);
+    // azimuthCurrent.withSupplyCurrentLimitEnable(true);
+    // driveCurrent.withSupplyCurrentLimit(35);
+    // driveCurrent.withSupplyCurrentThreshold(40);
+    // driveCurrent.withSupplyTimeThreshold(0.1);
+    // azimuthCurrent.withSupplyCurrentLimit(10);
+    // azimuthCurrent.withSupplyCurrentThreshold(15);
+    // azimuthCurrent.withSupplyTimeThreshold(0.1);
 
     azimuthFeedback.withRemoteCANcoder(azimuthEncoder);
 
     driveMotor.getConfigurator().apply(driveConfiguration);
     azimuthMotor.getConfigurator().apply(azimuthConfiguration);
+
+
 
   }
 

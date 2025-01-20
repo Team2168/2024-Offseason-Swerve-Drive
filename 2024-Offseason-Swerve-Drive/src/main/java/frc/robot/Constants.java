@@ -24,18 +24,18 @@ public final class Constants {
   }
 
   public static class DrivetrainConstants {
-    public static final int FL_DRIVE = 15;//mk4 steering: 12.8:1; driving: 8.14:1
-    public static final int FR_DRIVE = 1; //mk4 steering: 12.8:1; driving: 8.14:1
-    public static final int BL_DRIVE = 14; //wcpx steering: 13.3714:1, driving: 8.10:1
-    public static final int BR_DRIVE = 0; //wcpx steering: 13.3714:1, driving: 8.10:1
-    public static final int FL_AZIMUTH = 9; // change
-    public static final int FR_AZIMUTH = 7; // change
-    public static final int BL_AZIMUTH = 8; // change
-    public static final int BR_AZIMUTH = 6; // change must check phoenix 6
-    public static final int FL_CANCODER_ID = 0;
-    public static final int FR_CANCODER_ID = 1;
-    public static final int BL_CANCODER_ID = 2;
-    public static final int BR_CANCODER_ID = 3;
+    public static final int FL_DRIVE = 9;//mk4 steering: 12.8:1; driving: 8.14:1
+    public static final int FR_DRIVE = 10; //mk4 steering: 12.8:1; driving: 8.14:1
+    public static final int BL_DRIVE = 11; //wcpx steering: 13.3714:1, driving: 8.10:1
+    public static final int BR_DRIVE = 12; //wcpx steering: 13.3714:1, driving: 8.10:1
+    public static final int FL_AZIMUTH = 1; // change
+    public static final int FR_AZIMUTH = 2; // change
+    public static final int BL_AZIMUTH = 3; // change
+    public static final int BR_AZIMUTH = 4; // change must check phoenix 6
+    public static final int FL_CANCODER_ID = 5;
+    public static final int FR_CANCODER_ID = 6;
+    public static final int BL_CANCODER_ID = 7;
+    public static final int BR_CANCODER_ID = 8;
 
     public static final int PIGEON_ID = 17; //change
 
