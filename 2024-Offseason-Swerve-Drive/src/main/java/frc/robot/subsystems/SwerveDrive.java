@@ -9,6 +9,8 @@ import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
+import edu.wpi.first.math.controller.PIDController;
+import edu.wpi.first.math.controller.ProfiledPIDController;
 import edu.wpi.first.math.estimator.SwerveDrivePoseEstimator;
 import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Pose2d;
@@ -19,10 +21,14 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.TrajectoryGenerator;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
+import edu.wpi.first.math.trajectory.constraint.TrajectoryConstraint;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
 import edu.wpi.first.wpilibj.DutyCycle;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
+import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog.State;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Constants;
@@ -36,6 +42,7 @@ public class SwerveDrive extends SubsystemBase {
   private Pigeon2 pigeon;
   private SwerveDriveOdometry odometry;
   private SwerveDrivePoseEstimator estimator;
+  private HolonomicDriveController trajectoryController;
 
   private Translation2d flLocation = new Translation2d(Constants.DrivetrainConstants.X_POS_MODULE,
       Constants.DrivetrainConstants.Y_POS_MODULE);
@@ -69,7 +76,7 @@ public class SwerveDrive extends SubsystemBase {
 
     publisher = NetworkTableInstance.getDefault()
         .getStructArrayTopic("/MyStates", SwerveModuleState.struct).publish();
-
+    trajectoryController = new HolonomicDriveController(new PIDController(1,0,0), new PIDController(1,0,0), new ProfiledPIDController(1,0,0,new Constraints(4,2))); //tune
     resetEncoders();
 
   }
@@ -89,6 +96,10 @@ public class SwerveDrive extends SubsystemBase {
 
   }
 
+  public void followTrajectory(TrajectoryGenerator generator){
+    ChassisSpeeds speedsOnTrajectory = trajectoryController.calculate(odometry.getPoseMeters(),null,null); //fill from pathplanner/choreo waypoint states, List<State>
+    driveFieldRelative(speedsOnTrajectory, true, 0.1);
+  }
   public static SwerveDrive getInstance() {
     if (swerveInstance == null) {
       swerveInstance = new SwerveDrive();
@@ -137,9 +148,18 @@ public class SwerveDrive extends SubsystemBase {
     }
   }
 
+  public void updateModulePositions() {
+    for(int i = 0; i < 4; i++) {
+      modulePositions[i].distanceMeters = modules[i].getTranslationMeters();
+      modulePositions[i].angle = Rotation2d.fromDegrees(modules[i].getRotFromEncoderPos());
+    }
+  }
+
   @Override
   public void periodic() {
     publisher.set(states);
+    updateModulePositions();
+    odometry.update(pigeon.getRotation2d(), modulePositions);
 
   }
 

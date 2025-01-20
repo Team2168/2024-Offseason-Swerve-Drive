@@ -6,6 +6,7 @@ package frc.robot.commands;
 
 import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.SwerveDriveBrake;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -16,6 +17,9 @@ import frc.robot.subsystems.SwerveDrive;
 public class DriveWithJoystick extends Command {
  SwerveDrive swerveDrive;
  OI oi;
+ SlewRateLimiter xLimiter;
+ SlewRateLimiter yLimiter;
+ SlewRateLimiter thetaLimiter;
   public DriveWithJoystick(SwerveDrive swerveDrive) {
     this.swerveDrive = swerveDrive;
 
@@ -26,12 +30,18 @@ public class DriveWithJoystick extends Command {
   @Override
   public void initialize() {
     oi = OI.getInstance();
+    xLimiter = new SlewRateLimiter(5);
+    yLimiter = new SlewRateLimiter(5);
+    thetaLimiter = new SlewRateLimiter(7);
   }
 
   // Called every time the scheduler runs while the command is scheduled.
   @Override
   public void execute() {
-    swerveDrive.driveController(-oi.getRightY(), -oi.getRightX(), -oi.getLeftX());
+    double xNormalized = xLimiter.calculate(-oi.getRightY());
+    double yNormalized = yLimiter.calculate(-oi.getRightX());
+    double thetaNormalized = thetaLimiter.calculate(-oi.getLeftX());
+    swerveDrive.driveController(xNormalized, yNormalized, thetaNormalized);
   }
 
   // Called once the command ends or is interrupted.

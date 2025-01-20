@@ -75,15 +75,23 @@ public class Module extends SubsystemBase {
   private double azimuthGearRatio;
   private double wheelCircumference = Math.PI * wheelDiameter;
 
+  public static enum ModuleType { // use enum to store differing module constants instead of storing them as arrays in
+                                  // Constants
+
+    ModuleType {
+
+    }
+  }
   // TODO
   // pid, connect cancoder to configs, motoroutputconfigs, motionmagic, feedback.
   // ks, kv and ka for drive (velocity) motors, ks and kv for velocity, use
   // phoenix or sysid.
+  //correct invert based on module type
 
   public Module(int driveID, int azimuthID, int canCoderID, double steeringGearRation, double driveGearRatio) {
     this.driveGearRatio = driveGearRatio;
     this.azimuthGearRatio = steeringGearRation;
-    driveMotor = new TalonFX(driveID); //omit the canbus
+    driveMotor = new TalonFX(driveID); // omit the canbus
     azimuthMotor = new TalonFX(azimuthID);
     azimuthEncoder = new CANcoder(canCoderID);
     driveConfiguration = new TalonFXConfiguration();
@@ -114,7 +122,7 @@ public class Module extends SubsystemBase {
     // driveMotorOutput.withInverted(invert);
     // driveMotorOutput.withNeutralMode(brake);
     // driveMotorOutput.withDutyCycleNeutralDeadband(deadband);
-    
+
     // azimuthMotorOutput.withInverted(invert);
     // azimuthMotorOutput.withNeutralMode(brake);
     // azimuthMotorOutput.withDutyCycleNeutralDeadband(deadband);
@@ -140,8 +148,6 @@ public class Module extends SubsystemBase {
 
     driveMotor.getConfigurator().apply(driveConfiguration);
     azimuthMotor.getConfigurator().apply(azimuthConfiguration);
-
-
 
   }
 
@@ -211,8 +217,6 @@ public class Module extends SubsystemBase {
     driveMotor.setPosition(0.0);
     azimuthMotor.setPosition(0.0);
   }
-
-
 
   // public double
 
