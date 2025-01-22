@@ -4,9 +4,23 @@
 
 package frc.robot.subsystems;
 
+import java.util.List;
+
 import com.ctre.phoenix6.controls.DutyCycleOut;
 import com.ctre.phoenix6.hardware.Pigeon2;
 import com.ctre.phoenix6.hardware.TalonFX;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
+import com.pathplanner.lib.auto.AutoBuilder;
+import com.pathplanner.lib.commands.FollowPathCommand;
+import com.pathplanner.lib.commands.FollowPathHolonomic;
+import com.pathplanner.lib.commands.PathPlannerAuto;
+import com.pathplanner.lib.controllers.PPHolonomicDriveController;
+import com.pathplanner.lib.path.PathConstraints;
+import com.pathplanner.lib.path.PathPlannerPath;
+import com.pathplanner.lib.path.PathPlannerTrajectory;
+import com.pathplanner.lib.path.PathPoint;
+import com.pathplanner.lib.path.PathPlannerTrajectory.State;
 
 import edu.wpi.first.math.controller.HolonomicDriveController;
 import edu.wpi.first.math.controller.PIDController;
@@ -21,14 +35,16 @@ import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
 import edu.wpi.first.math.kinematics.SwerveDriveOdometry;
 import edu.wpi.first.math.kinematics.SwerveModulePosition;
 import edu.wpi.first.math.kinematics.SwerveModuleState;
+import edu.wpi.first.math.trajectory.Trajectory;
 import edu.wpi.first.math.trajectory.TrajectoryGenerator;
 import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.math.trajectory.constraint.TrajectoryConstraint;
 import edu.wpi.first.networktables.NetworkTableInstance;
 import edu.wpi.first.networktables.StructArrayPublisher;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DutyCycle;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import edu.wpi.first.wpilibj.sysid.SysIdRoutineLog.State;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.SwerveControllerCommand;
 import frc.robot.Constants;
@@ -54,7 +70,7 @@ public class SwerveDrive extends SubsystemBase {
       -Constants.DrivetrainConstants.Y_POS_MODULE);
 
   private Module[] modules = new Module[4];
-  private Translation2d[] locations = {flLocation, frLocation, blLocation, brLocation};
+  private Translation2d[] locations = { flLocation, frLocation, blLocation, brLocation };
 
   StructArrayPublisher<SwerveModuleState> publisher;
 
@@ -76,7 +92,8 @@ public class SwerveDrive extends SubsystemBase {
 
     publisher = NetworkTableInstance.getDefault()
         .getStructArrayTopic("/MyStates", SwerveModuleState.struct).publish();
-    trajectoryController = new HolonomicDriveController(new PIDController(1,0,0), new PIDController(1,0,0), new ProfiledPIDController(1,0,0,new Constraints(4,2))); //tune
+    trajectoryController = new HolonomicDriveController(new PIDController(1, 0, 0), new PIDController(1, 0, 0),
+        new ProfiledPIDController(1, 0, 0, new Constraints(4, 2))); // tune
     resetEncoders();
 
   }
@@ -85,21 +102,36 @@ public class SwerveDrive extends SubsystemBase {
     ChassisSpeeds speeds = fieldRelative
         ? ChassisSpeeds.discretize(ChassisSpeeds.fromFieldRelativeSpeeds(chassisSpeeds, pigeon.getRotation2d()),
             timestamp)
-        : ChassisSpeeds.fromRobotRelativeSpeeds(chassisSpeeds, pigeon.getRotation2d());
+        : ChassisSpeeds.discretize(ChassisSpeeds.fromRobotRelativeSpeeds(chassisSpeeds, pigeon.getRotation2d()),
+            timestamp);
     states = kinematics.toSwerveModuleStates(speeds);
     SwerveDriveKinematics.desaturateWheelSpeeds(states, Constants.DrivetrainConstants.MAX_VELOCITY);
     for (int i = 0; i < 4; i++) {
       SwerveModuleState optimizedState = SwerveModuleState.optimize(states[i],
-          Rotation2d.fromDegrees(modules[i].getRotFromEncoderPos()));
+          Rotation2d.fromDegrees(modules[i].getAngleDegrees()));
       modules[i].setInput(optimizedState.speedMetersPerSecond, optimizedState.angle.getRotations());
     }
 
   }
 
-  public void followTrajectory(TrajectoryGenerator generator){
-    ChassisSpeeds speedsOnTrajectory = trajectoryController.calculate(odometry.getPoseMeters(),null,null); //fill from pathplanner/choreo waypoint states, List<State>
-    driveFieldRelative(speedsOnTrajectory, true, 0.1);
-  }
+  // public void followTrajectory(String pathfileDirectory) {
+  //   PathPlannerPath path = PathPlannerPath.fromPathFile(pathfileDirectory);
+  //   PathPlannerTrajectory trajectory = new PathPlannerTrajectory(path, new ChassisSpeeds(), pigeon.getRotation2d()); // get
+  //                                                                                                                    // actual
+  //                                                                                                                    // chassisSpeeds;
+  //   for (State pathPlannerState : trajectory.getStates()) {
+  //     Trajectory.State state = new Trajectory.State(pathPlannerState.timeSeconds, pathPlannerState.velocityMps,
+  //         pathPlannerState.accelerationMpsSq, pathPlannerState.getTargetHolonomicPose(),
+  //         pathPlannerState.curvatureRadPerMeter);
+  //     ChassisSpeeds speedsOnTrajectory = trajectoryController.calculate(odometry.getPoseMeters(), state,
+  //         pathPlannerState.heading);
+
+  //     driveFieldRelative(speedsOnTrajectory, true, Timer.getFPGATimestamp()); // check if robotRelative and timestamp
+  //     // use pathplanner contrainsts
+
+  //   }
+  // }
+
   public static SwerveDrive getInstance() {
     if (swerveInstance == null) {
       swerveInstance = new SwerveDrive();
@@ -149,9 +181,9 @@ public class SwerveDrive extends SubsystemBase {
   }
 
   public void updateModulePositions() {
-    for(int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; i++) {
       modulePositions[i].distanceMeters = modules[i].getTranslationMeters();
-      modulePositions[i].angle = Rotation2d.fromDegrees(modules[i].getRotFromEncoderPos());
+      modulePositions[i].angle = Rotation2d.fromDegrees(modules[i].getAngleDegrees());
     }
   }
 

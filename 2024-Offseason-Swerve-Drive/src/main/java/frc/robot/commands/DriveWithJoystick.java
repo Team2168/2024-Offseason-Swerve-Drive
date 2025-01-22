@@ -30,9 +30,9 @@ public class DriveWithJoystick extends Command {
   @Override
   public void initialize() {
     oi = OI.getInstance();
-    xLimiter = new SlewRateLimiter(5);
-    yLimiter = new SlewRateLimiter(5);
-    thetaLimiter = new SlewRateLimiter(7);
+    xLimiter = new SlewRateLimiter(7);
+    yLimiter = new SlewRateLimiter(7);
+    thetaLimiter = new SlewRateLimiter(5);
   }
 
   // Called every time the scheduler runs while the command is scheduled.

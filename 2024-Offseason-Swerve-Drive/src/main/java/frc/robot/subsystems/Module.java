@@ -21,6 +21,7 @@ import com.ctre.phoenix6.hardware.CANcoder;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveDrivetrain;
 import com.ctre.phoenix6.mechanisms.swerve.SwerveModule;
+import com.ctre.phoenix6.mechanisms.swerve.SwerveRequest.FieldCentricFacingAngle;
 import com.ctre.phoenix6.signals.InvertedValue;
 import com.ctre.phoenix6.signals.NeutralModeValue;
 
@@ -55,19 +56,19 @@ public class Module extends SubsystemBase {
   private CurrentLimitsConfigs driveCurrent;
   private CurrentLimitsConfigs azimuthCurrent;
   private DutyCycleOut driveCycleOut = new DutyCycleOut(0.0);
-  private double deadband = 0.002;
-  private double drivekP = 1;
+  private double deadband = 1;
+  private double drivekP = 0.03;
   private double drivekI = 0.0025;
   private double drivekD = 0.005;
   private double driveKs = 10;
   private double driveKv = 5;
   private double driveKa = 5;
-  private double azimuthkP = 1;
+  private double azimuthkP = 20;
   private double azimuthkI = 0.0025;
   private double azimuthkD = 0.005;
-  private double motionAccel = 120;
-  private double cruiseVelocity = 100;
-  private MotionMagicVelocityVoltage volts;
+  private double motionAccel = 10;
+  private double cruiseVelocity = 10;
+
   private SwerveDrivetrain trian;
 
   private double wheelDiameter = Units.inchesToMeters(1.5);
@@ -97,18 +98,18 @@ public class Module extends SubsystemBase {
     driveConfiguration = new TalonFXConfiguration();
     azimuthConfiguration = new TalonFXConfiguration();
     azimuthVoltage = new MotionMagicVoltage(0.0);
-    // driveMotionVoltage = new MotionMagicVoltage(0.0);
-    // azimuthMagicConfigs = azimuthConfiguration.MotionMagic;
-    // driveMagicConfigs = driveConfiguration.MotionMagic;
-    // azimuthMagicConfigs.withMotionMagicAcceleration(motionAccel);
-    // azimuthMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
-    // driveMagicConfigs.withMotionMagicAcceleration(motionAccel);
-    // driveMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
+    driveMotionVoltage = new MotionMagicVoltage(0.0);
+    azimuthMagicConfigs = azimuthConfiguration.MotionMagic;
+    driveMagicConfigs = driveConfiguration.MotionMagic;
+    azimuthMagicConfigs.withMotionMagicAcceleration(motionAccel);
+    azimuthMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
+    driveMagicConfigs.withMotionMagicAcceleration(motionAccel);
+    driveMagicConfigs.withMotionMagicCruiseVelocity(cruiseVelocity);
 
     driveMotorVelocity = new VelocityVoltage(0.0);
-    // driveMotorVelocityConfigs = driveConfiguration.Voltage;
-    // driveMotorVelocityConfigs.withPeakForwardVoltage(10);
-    // driveMotorVelocityConfigs.withPeakReverseVoltage(10);
+    driveMotorVelocityConfigs = driveConfiguration.Voltage;
+    driveMotorVelocityConfigs.withPeakForwardVoltage(12);
+    driveMotorVelocityConfigs.withPeakReverseVoltage(12);
 
     driveMotorOutput = driveConfiguration.MotorOutput;
     azimuthMotorOutput = azimuthConfiguration.MotorOutput;
@@ -119,30 +120,30 @@ public class Module extends SubsystemBase {
     driveCurrent = driveConfiguration.CurrentLimits;
     azimuthCurrent = azimuthConfiguration.CurrentLimits;
 
-    // driveMotorOutput.withInverted(invert);
-    // driveMotorOutput.withNeutralMode(brake);
-    // driveMotorOutput.withDutyCycleNeutralDeadband(deadband);
+    driveMotorOutput.withInverted(invert);
+    driveMotorOutput.withNeutralMode(brake);
+    driveMotorOutput.withDutyCycleNeutralDeadband(deadband);
 
-    // azimuthMotorOutput.withInverted(invert);
-    // azimuthMotorOutput.withNeutralMode(brake);
-    // azimuthMotorOutput.withDutyCycleNeutralDeadband(deadband);
+    azimuthMotorOutput.withInverted(invert);
+    azimuthMotorOutput.withNeutralMode(brake);
+    azimuthMotorOutput.withDutyCycleNeutralDeadband(deadband);
 
-    // driveSlot0Configs.withKP(drivekP);
-    // driveSlot0Configs.withKI(drivekI);
-    // driveSlot0Configs.withKD(drivekD);
-    // driveSlot0Configs.withKS(driveKs);
-    // azimuthSlot0Configs.withKP(azimuthkP);
-    // azimuthSlot0Configs.withKI(azimuthkI);
-    // azimuthSlot0Configs.withKD(azimuthkD);
+    driveSlot0Configs.withKP(drivekP);
+    driveSlot0Configs.withKI(drivekI);
+    driveSlot0Configs.withKD(drivekD);
+    driveSlot0Configs.withKS(driveKs);
+    azimuthSlot0Configs.withKP(azimuthkP);
+    azimuthSlot0Configs.withKI(azimuthkI);
+    azimuthSlot0Configs.withKD(azimuthkD);
 
-    // driveCurrent.withSupplyCurrentLimitEnable(true);
-    // azimuthCurrent.withSupplyCurrentLimitEnable(true);
-    // driveCurrent.withSupplyCurrentLimit(35);
-    // driveCurrent.withSupplyCurrentThreshold(40);
-    // driveCurrent.withSupplyTimeThreshold(0.1);
-    // azimuthCurrent.withSupplyCurrentLimit(10);
-    // azimuthCurrent.withSupplyCurrentThreshold(15);
-    // azimuthCurrent.withSupplyTimeThreshold(0.1);
+    driveCurrent.withSupplyCurrentLimitEnable(true);
+    azimuthCurrent.withSupplyCurrentLimitEnable(true);
+    driveCurrent.withSupplyCurrentLimit(35);
+    driveCurrent.withSupplyCurrentThreshold(40);
+    driveCurrent.withSupplyTimeThreshold(0.1);
+    azimuthCurrent.withSupplyCurrentLimit(10);
+    azimuthCurrent.withSupplyCurrentThreshold(15);
+    azimuthCurrent.withSupplyTimeThreshold(0.1);
 
     azimuthFeedback.withRemoteCANcoder(azimuthEncoder);
 
@@ -157,6 +158,7 @@ public class Module extends SubsystemBase {
 
   public void setRotation(double rotations) {
     azimuthMotor.setControl(azimuthVoltage.withPosition((rotations * azimuthGearRatio)));
+    
   }
 
   public void setInput(double meters, double rotations) {
@@ -204,10 +206,6 @@ public class Module extends SubsystemBase {
   // public double metersToSensorUnits(double rot) {
   // return metersToRot(rot)/60;
   // }
-
-  public double getRotFromEncoderPos() {
-    return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue()) / azimuthGearRatio;
-  }
 
   public double getAngleDegrees() {
     return Units.rotationsToDegrees(azimuthMotor.getPosition().getValue() / azimuthGearRatio);
